@@ -1,6 +1,7 @@
 #define N_TO_AVERAGE 10
 #define P_LED1 12
-#define P_LED2 13
+#define P_LED1 12 // Green LED and heater
+#define P_LED2 13 // Red LED
 #define P_SEL 4
 #define P_TARG 4
 #define T_PAUSE 1000 // pause in milliseconds
@@ -46,26 +47,28 @@ void setup() {
     pinMode(P_LED1, OUTPUT);
     pinMode(P_LED2, OUTPUT);
 // CYCLE THE LED'S TO MAKE SURE THEY WORK    
-    digitalWrite(P_LED1,HIGH);
-    digitalWrite(P_LED2,HIGH);  
-    delay(1000);
-    digitalWrite(P_LED1,HIGH);
-    digitalWrite(P_LED2,LOW);  
-    delay(1000);
-    digitalWrite(P_LED1,LOW);
-    digitalWrite(P_LED2,HIGH);
-    delay(1000);
+    digitalWrite(P_LED1,HIGH);    digitalWrite(P_LED2,HIGH);  
+    delay(200);
+    digitalWrite(P_LED1,HIGH);    digitalWrite(P_LED2,LOW);  
+    delay(200);
+    digitalWrite(P_LED1,HIGH);    digitalWrite(P_LED2,HIGH); 
+    delay(800);
+    digitalWrite(P_LED1,LOW);    digitalWrite(P_LED2,HIGH);
+    delay(200);
+    digitalWrite(P_LED1,HIGH);    digitalWrite(P_LED2,HIGH); 
 // THERMOMETERS
     sensors1.begin();
     sensors2.begin();
   // TIMER
-  atMega328P_T1(0b101,15625-1);
-wdt_reset();
+    atMega328P_T1(0b101,15625-1);
+    t = 0;
+    wdt_reset();
 } // SETUP
 
 void loop() {
 // WATCHDOG
-    wdt_reset();
+    if(t<(60*10)){
+    wdt_reset();}
 
     int T1, T2, intTarget, heatOn, takeAPause;
     float T, target;
@@ -75,7 +78,7 @@ void loop() {
         Lcd.setCursor(4,0);
         if(Selector){ Lcd.print("FERMENTING");}
         else {Lcd.print("BREWING");}
-        delay(1500);
+        delay(1200);
         Lcd.clear();
         }
     Selector = digitalRead(P_SEL);
@@ -88,11 +91,12 @@ void loop() {
 
 // HEATER CONTROL
     T = (max(T1, 0) + max(T2, 0)) / ((T1 > 0) + (T2 > 0)) + 0.0;
-    heatOn = (T < target) && (T > 0);
+    heatOn = ((T < target) && (T > 0));
     takeAPause = (heatOn == digitalRead(12)); // If the heater changes state, we shold wait for a sec so we don't click a bunch
     digitalWrite(P_LED1, 1 - heatOn); // Putting th pin low turns the LED on. This pin doubles as a heater & the LED
     digitalWrite(P_LED2,(T>(target-2.0)) & (T<(target+2.0))); // putting the pin low turns the LED on 
     delay(T_PAUSE * takeAPause);
+    Lcd.setCursor(14,0); Lcd.print(T);
 
 // DISPLAY
         // Show T1
@@ -108,7 +112,7 @@ void loop() {
         Lcd.setCursor(9+(target<=100), 0);    Lcd.print((int) target);
         Lcd.setCursor(7, 1);    Lcd.print("T:   ");
         Lcd.setCursor(9+(T<=100), 1);    Lcd.print((int) T);
-        Lcd.setCursor(13, 1);    Lcd.print((int) t/60);  
+        Lcd.setCursor(13, 1);    Lcd.print((int) t);  
 }
  
 ISR(TIMER1_COMPA_vect){ // put interrupt code here
