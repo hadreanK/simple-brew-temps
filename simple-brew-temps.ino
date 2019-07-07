@@ -1,5 +1,4 @@
 #define N_TO_AVERAGE 10
-#define P_LED1 12
 #define P_LED1 12 // Green LED and heater
 #define P_LED2 13 // Red LED
 #define P_SEL 4
